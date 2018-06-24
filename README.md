@@ -4,9 +4,8 @@ Publication lag time analysis from PubMed data
 Get a summary of publication lag times from a PubMed XML file.
 
 1. Run a Pubmed search and download the file as XML. Example query: `nat commun[ta] AND 2000 : 2018[pdat] AND journal article[pt]`. Select _Send To: File: XML_.
-2. Place both .R files in your working directory.
-3. Run `pubmedlag.R` pointing R at your downloaded XML file.
-4. R will save a version of the data as csv and will calculate publication lag time and make some plots.
+2. Run `pubmedlag.R` pointing R at your downloaded XML file.
+3. R will save a version of the data as csv, it will calculate publication lag time, make some plots and save as png.
 
 ![](yearPlot.png)
 
@@ -16,7 +15,9 @@ Three dates of interest are stored in a complete pubmed record.
 2. When the paper was _accepted_.
 3. When the paper was _published_.
 
-Note that **these dates are not available for every record**. This is especially true of older papers. Because we have three dates, we can calculate three different time periods.
+Note that **these dates are not available for every record**. This is especially true of older papers.
+
+Because we have three dates, we can calculate three different time periods.
 
 1. From received to accepted (recacc).
 2. From received to published (recpub).

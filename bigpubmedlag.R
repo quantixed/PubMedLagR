@@ -105,7 +105,12 @@ theMergedData <- theMergedData[complete.cases(theMergedData[ , 15]),]
 theMergedData <- theMergedData[which(theMergedData$recpub > 0),]
 ## summarise by journal
 journalInfo <- aggregate(theMergedData[, 15], list(theMergedData$journal), median)
+journalCount <- aggregate(x = theMergedData$journal, by = list(unique.values = theMergedData$journal), FUN = length)
 colnames(journalInfo) <- c("journal","median_recpub")
+colnames(journalCount) <- c("journal","articles")
+## drop journals that published fewer than 10 articles
+journalCount <- journalCount[which(journalCount$articles > 10),]
+journalInfo <- merge(x = journalCount, y = journalInfo, by="journal")
 
 ## make plots
 p1 <- ggplot(theMergedData, aes(x = recpub)) + 
@@ -116,6 +121,7 @@ p1 <- ggplot(theMergedData, aes(x = recpub)) +
   labs(x = "Received-Published (days)", y = "Papers") + 
   theme(axis.text=element_text(size=20), axis.title=element_text(size=24,face="bold"))
 p1
+median(theMergedData$recpub)
 
 p2 <- ggplot(journalInfo, aes(x = median_recpub)) + 
   geom_histogram(binwidth=7) + 
@@ -125,6 +131,7 @@ p2 <- ggplot(journalInfo, aes(x = median_recpub)) +
   labs(x = "Median Received-Published (days)", y = "Journals") + 
   theme(axis.text=element_text(size=20), axis.title=element_text(size=24,face="bold"))
 p2
+median(journalInfo$median_recpub)
 
 ggsave("Output/Plots/paperSummary.png", p1, dpi = 300)
 ggsave("Output/Plots/journalSummary.png", p2, dpi = 300)

@@ -1,8 +1,27 @@
+library(devtools)
+install_github("ropensci/rentrez")
+library(rentrez)
 require(XML)
 require(ggplot2)
 require(ggridges)
 require(gridExtra)
-filename <- file.choose()
+
+## Setup preferred directory structure in wd
+ifelse(!dir.exists("Data"), dir.create("Data"), "Folder exists already")
+ifelse(!dir.exists("Output"), dir.create("Output"), "Folder exists already")
+ifelse(!dir.exists("Output/Data"), dir.create("Output/Data"), "Folder exists already")
+ifelse(!dir.exists("Output/Plots"), dir.create("Output/Plots"), "Folder exists already")
+ifelse(!dir.exists("Script"), dir.create("Script"), "Folder exists already")
+
+# search pubmed using a search term (use_history allows retireval of all records)
+pp <- entrez_search(db="pubmed", term="cell[ta] AND 2010 : 2021[pdat] AND (journal article[pt] NOT review[pt])", use_history = TRUE)
+pp_rec <- entrez_fetch(db="pubmed", web_history=pp$web_history, rettype="xml", parsed=TRUE)
+# save records as XML file
+saveXML(pp_rec, file = "Data/records.xml")
+filename <- "Data/records.xml"
+# # or select XML file
+# filename <- file.choose()
+
 ## extract a data frame from XML file
 ## This is modified from christopherBelter's pubmedXML R code
 extract_xml <- function(theFile) {
@@ -74,7 +93,7 @@ extract_xml <- function(theFile) {
 
 ## Script to make the plots
 theData <- extract_xml(filename)
-write.csv(theData, file = "pubmed_data.csv")
+write.csv(theData, file = "Output/Data/pubmed_data.csv")
 theData$recacc <-as.numeric(theData$accdate - theData$recdate)
 theData$recpub <-as.numeric(theData$pubdate - theData$recdate)
 theData$accpub <-as.numeric(theData$pubdate - theData$accdate)
@@ -97,6 +116,7 @@ p4 <- ggplot(theData, aes(x = pubdate, y = recacc)) +
   ylim(0,min(max(theData$recacc),1000, na.rm = TRUE)) +
   labs(x = "Publication date", y = "Received-Accepted (days)") + 
   theme(axis.text=element_text(size=20), axis.title=element_text(size=24,face="bold"))
-png("yearPlot.png", width = 1000, height = 1000)
+
+png("Output/Plots/yearPlot.png", width = 1000, height = 1000)
 grid.arrange(p1, p2, p3, p4, nrow = 2)
 dev.off()

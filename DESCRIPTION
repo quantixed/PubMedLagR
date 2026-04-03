@@ -1,0 +1,17 @@
+Package: PubMedLagR
+Title: Analysis of publication lag times using PubMed data
+Version: 0.0.0.9000
+Authors@R:
+    person(given = "Stephen J",
+           family = "Royle",
+           role = c("cre", "aut"),
+           email = "admin@quantixed.org",
+           comment = c(ORCID = "0000-0001-8927-6967"))
+Maintainer: Stephen Royle <admin@quantixed.org>
+Description: This package is intended for parsing data from PubMed XML files,
+  retrieved for example by {rentrez} and analysing the data with some
+  straightforward functions. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

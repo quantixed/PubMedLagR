@@ -6,16 +6,22 @@
 #' information, and clinical trial identifiers.
 #'
 #' @param theFile The path to the PubMed XML file to be processed.
-#' @param include_all If TRUE, includes all optional fields (abstracts, dates, and other metadata).
-#' @param include_abstract If TRUE, includes the abstract text in the output data frame.
-#' @param include_dates If TRUE, includes publication dates (received, accepted, and pubmed) in the output data frame.
-#' @param include_other If TRUE, includes additional metadata such as MeSH headings, chemical names, grant information, and clinical trial identifiers in the output data frame.
+#' @param include_all If TRUE, includes all optional fields (abstracts, dates,
+#'   and other metadata).
+#' @param include_abstract If TRUE, includes the abstract text in the output
+#'   data frame.
+#' @param include_dates If TRUE, includes publication dates (received, accepted,
+#'   and pubmed) in the output data frame.
+#' @param include_other If TRUE, includes additional metadata such as MeSH
+#'   headings, chemical names, grant information, and clinical trial identifiers
+#'   in the output data frame.
 #'
-#' @returns A data frame containing the extracted information from the PubMed XML file, with columns for PMID, DOI, authors, year, article title, journal, volume, issue, pages, publication type, and optionally abstracts, dates, and other metadata.
+#' @returns A data frame containing the extracted information from the PubMed
+#'   XML file, with columns for PMID, DOI, authors, year, article title,
+#'   journal, volume, issue, pages, publication type, and optionally abstracts,
+#'   dates, and other metadata.
 #' @export
 #'
-#' @examples
-
 get_data_from_pubmed_xml <- function(theFile,
                                      include_all = FALSE,
                                      include_abstract = FALSE,
@@ -193,5 +199,5 @@ get_data_from_pubmed_xml <- function(theFile,
     )
   }
 
-  theDF
+  return(theDF)
 }

@@ -96,7 +96,7 @@ retrieve_journal_year_records <- function(journals = NULL,
         pp_rec <- entrez_fetch(db = "pubmed",
                                web_history = pp$web_history,
                                rettype = "xml", parsed = TRUE)
-        write_xml(pp_rec, file = xml_name)
+        saveXML(pp_rec, file = xml_name)
       }
 
       # now deal with the case where there are batch_size to 9999 papers
@@ -115,7 +115,7 @@ retrieve_journal_year_records <- function(journals = NULL,
                                  web_history = pp$web_history,
                                  rettype = "xml", parsed = TRUE,
                                  retstart = start, retmax = batch_size)
-          write_xml(pp_rec, file = xml_name)
+          saveXML(pp_rec, file = xml_name)
         }
       }
 
@@ -149,7 +149,7 @@ retrieve_journal_year_records <- function(journals = NULL,
             pp_rec <- entrez_fetch(db = "pubmed",
                                    web_history = pp$web_history,
                                    rettype = "xml", parsed = TRUE)
-            write_xml(pp_rec, file = xml_name)
+            saveXML(pp_rec, file = xml_name)
           } else {
             # if there are more than batchsize papers, we need to fetch them in batches
             for (start in seq(0, pp$count, by = batch_size)) {
@@ -167,7 +167,7 @@ retrieve_journal_year_records <- function(journals = NULL,
                                      web_history = pp$web_history,
                                      rettype = "xml", parsed = TRUE,
                                      retstart = start, retmax = batch_size)
-              write_xml(pp_rec, file = xml_name)
+              saveXML(pp_rec, file = xml_name)
             }
           }
         }

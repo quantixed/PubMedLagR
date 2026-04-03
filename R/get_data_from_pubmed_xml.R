@@ -32,8 +32,8 @@ get_data_from_pubmed_xml <- function(theFile,
     include_dates <- TRUE
     include_other <- TRUE
   }
-  doc <- xml2::read_xml(theFile)
-  records <- xml2::xml_find_all(doc, "//PubmedArticle")
+  doc <- read_xml(theFile)
+  records <- xml_find_all(doc, "//PubmedArticle")
 
   if (length(records) == 0) {
     return(NULL)
@@ -41,8 +41,8 @@ get_data_from_pubmed_xml <- function(theFile,
 
   collapse_nodes <- function(nodes, xpath, unique_values = FALSE) {
     values <- vapply(nodes, function(node) {
-      matches <- xml2::xml_find_all(node, xpath)
-      text <- trimws(xml2::xml_text(matches))
+      matches <- xml_find_all(node, xpath)
+      text <- trimws(xml_text(matches))
       text <- text[nzchar(text)]
 
       if (unique_values) {
@@ -61,11 +61,11 @@ get_data_from_pubmed_xml <- function(theFile,
 
   extract_authors <- function(nodes) {
     values <- vapply(nodes, function(node) {
-      author_nodes <- xml2::xml_find_all(node, ".//Author")
+      author_nodes <- xml_find_all(node, ".//Author")
       author_nodes <- as.list(author_nodes)
 
       safe_text <- function(author_node, xpath) {
-        value <- trimws(xml2::xml_text(xml2::xml_find_first(author_node, xpath)))
+        value <- trimws(xml_text(xml_find_first(author_node, xpath)))
         if (length(value) == 0 || is.na(value)) {
           return("")
         }
@@ -109,10 +109,10 @@ get_data_from_pubmed_xml <- function(theFile,
 
   extract_year <- function(nodes) {
     values <- vapply(nodes, function(node) {
-      year_value <- trimws(xml2::xml_text(xml2::xml_find_first(node, ".//PubDate/Year")))
+      year_value <- trimws(xml_text(xml_find_first(node, ".//PubDate/Year")))
 
       if (!nzchar(year_value)) {
-        medline_value <- trimws(xml2::xml_text(xml2::xml_find_first(node, ".//PubDate/MedlineDate")))
+        medline_value <- trimws(xml_text(xml_find_first(node, ".//PubDate/MedlineDate")))
         year_value <- sub("^([0-9]{4}).*$", "\\1", medline_value)
         if (!grepl("^[0-9]{4}$", year_value)) {
           year_value <- NA_character_
@@ -129,14 +129,14 @@ get_data_from_pubmed_xml <- function(theFile,
     month_lookup <- setNames(sprintf("%02d", seq_along(month.abb)), tolower(month.abb))
 
     values <- vapply(nodes, function(node) {
-      date_node <- xml2::xml_find_first(node, paste0(".//PubMedPubDate[@PubStatus='", status, "']"))
+      date_node <- xml_find_first(node, paste0(".//PubMedPubDate[@PubStatus='", status, "']"))
       if (inherits(date_node, "xml_missing")) {
         return(NA_character_)
       }
 
-      year_value <- trimws(xml2::xml_text(xml2::xml_find_first(date_node, "./Year")))
-      month_value <- trimws(xml2::xml_text(xml2::xml_find_first(date_node, "./Month")))
-      day_value <- trimws(xml2::xml_text(xml2::xml_find_first(date_node, "./Day")))
+      year_value <- trimws(xml_text(xml_find_first(date_node, "./Year")))
+      month_value <- trimws(xml_text(xml_find_first(date_node, "./Month")))
+      day_value <- trimws(xml_text(xml_find_first(date_node, "./Day")))
 
       if (!nzchar(year_value) || !nzchar(month_value) || !nzchar(day_value)) {
         return(NA_character_)

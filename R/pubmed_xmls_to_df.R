@@ -1,4 +1,4 @@
-#' PubMed XML to Data Frame
+#' PubMed XMLs to Data Frame
 #'
 #' Wrapper function to extract data from all XML files in `data_dir` and combine
 #' them into a single data frame. Optionally, it can clean the data by removing
@@ -13,7 +13,7 @@
 #' @returns data frame of PubMed records
 #' @export
 
-pubmed_xml_to_df <- function(data_dir = "Data",
+pubmed_xmls_to_df <- function(data_dir = "Data",
                              clean = TRUE) {
 
   xml_files <- list.files(data_dir, pattern = "\\.xml$", full.names = TRUE)

@@ -100,9 +100,9 @@ retrieve_journal_year_records <- function(journals = NULL,
       }
 
       # now deal with the case where there are batch_size to 9999 papers
-      if(pp$count > batch_size & pp$count < 10000) {
+      if(pp$count >= batch_size & pp$count < 10000) {
         # if there are more than batch_size papers, fetch them in batches
-        for (start in seq(0, pp$count, by = batch_size)) {
+        for (start in seq(0, pp$count - 1, by = batch_size)) {
           end <- min(start + batch_size - 1, pp$count)
           xml_name <- paste0(data_dir, "/all_",
                              i, "_", extract_journal_name(j), "_",
@@ -152,7 +152,7 @@ retrieve_journal_year_records <- function(journals = NULL,
             saveXML(pp_rec, file = xml_name)
           } else {
             # if there are more than batchsize papers, we need to fetch them in batches
-            for (start in seq(0, pp$count, by = batch_size)) {
+            for (start in seq(0, pp$count - 1, by = batch_size)) {
               end <- min(start + batch_size - 1, pp$count)
               xml_name <- paste0(data_dir, "/all_",
                                  i, "-", sprintf("%02d", m), "_",

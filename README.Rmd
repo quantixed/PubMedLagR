@@ -1,0 +1,61 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# PubMedLagR
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of PubMedLagR is to analyse the lag time between the publication of a scientific article and its indexing in PubMed. This package provides functions to retrieve publication data from PubMed, process it, and visualize the lag time trends over the years.
+
+It can also be used to retrieve PubMed data into R for other purposes, such as bibliometric analyses, text mining, or any research that requires access to PubMed records.
+
+## Installation
+
+You can install the development version of PubMedLagR from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("quantixed/PubMedLagR")
+```
+
+## Example
+
+Once the package is installed, in a new project you can use the following code to retrieve PubMed records for a list of journals and years, and then convert the retrieved XML files into a data frame for analysis:
+
+```{r example, eval = FALSE}
+library(PubMedLagR)
+jrnl_list <- c("EMBO J","J Cell Biol", "Nat Cell Biol")
+yrs <- 2015:2025
+retrieve_journal_year_records(jrnl_list, yrs, batch_size = 250)
+pprs <- pubmed_xmls_to_df()
+```
+
+In the case of lots of XML files, you might want to save the data frames as CSVs instead of combining them into a single data frame in R.
+You can do this with the `pubmed_xmls_to_csvs()` function:
+
+```{r example_csv, eval = FALSE}
+pubmed_xmls_to_csvs()
+# load all csvs in Output/Data and combine into one data frame
+csv_files <- list.files("Output/Data", pattern = "*.csv", full.names = TRUE)
+data_list <- lapply(csv_files, read.csv)
+pprs <- do.call(rbind, data_list)
+```
+
+## Note
+
+The default option is to *include* papers and *exclude* reviews when retrieving records - use `papers_only = FALSE` to disable this filter.
+
+Similarly, when parsing the XML files to a data frame, there is a clean-up step which removes duplicates, filters out unwanted publication types, and ensures that only journal articles (i.e. papers) are included. You can disable this clean-up step by using `clean = FALSE` when calling `pubmed_xmls_to_df()`. When using `pubmed_xmls_to_csv()` the clean-up step is not applied, so all records in the XML files will be included in the resulting CSVs (and must be manually cleaned) if desired.

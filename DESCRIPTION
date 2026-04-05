@@ -21,5 +21,4 @@ Imports:
     parallel,
     rentrez,
     stats,
-    XML,
-    xml2
+    XML

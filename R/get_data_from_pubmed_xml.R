@@ -32,111 +32,88 @@ get_data_from_pubmed_xml <- function(theFile,
     include_dates <- TRUE
     include_other <- TRUE
   }
-  doc <- read_xml(theFile)
-  records <- xml_find_all(doc, "//PubmedArticle")
+
+  # this version uses {XML} and is much faster
+  # than the previous version using {xml2}
+
+  doc <- xmlParse(theFile)
+  records <- getNodeSet(doc, "//PubmedArticle")
 
   if (length(records) == 0) {
+    free(doc)
     return(NULL)
   }
 
+  # Helper: get trimmed text of first matching node, or ""
+  node_text <- function(node, xpath) {
+    val <- xpathSApply(node, xpath, xmlValue)
+    if (!is.character(val) || length(val) == 0) return("")
+    trimws(val[[1]])
+  }
+
   collapse_nodes <- function(nodes, xpath, unique_values = FALSE) {
-    values <- vapply(nodes, function(node) {
-      matches <- xml_find_all(node, xpath)
-      text <- trimws(xml_text(matches))
+    vapply(nodes, function(node) {
+      text <- xpathSApply(node, xpath, xmlValue)
+      if (!is.character(text) || length(text) == 0) return(NA_character_)
+      text <- trimws(text)
       text <- text[nzchar(text)]
-
-      if (unique_values) {
-        text <- unique(text)
-      }
-
-      if (length(text) == 0) {
-        return(NA_character_)
-      }
-
+      if (unique_values) text <- unique(text)
+      if (length(text) == 0) return(NA_character_)
       paste(text, collapse = "|")
     }, character(1))
-
-    unname(values)
   }
 
   extract_authors <- function(nodes) {
-    values <- vapply(nodes, function(node) {
-      author_nodes <- xml_find_all(node, ".//Author")
-      author_nodes <- as.list(author_nodes)
-
-      safe_text <- function(author_node, xpath) {
-        value <- trimws(xml_text(xml_find_first(author_node, xpath)))
-        if (length(value) == 0 || is.na(value)) {
-          return("")
-        }
-        value
-      }
+    vapply(nodes, function(node) {
+      author_nodes <- getNodeSet(node, ".//Author")
 
       authors <- vapply(author_nodes, function(author_node) {
-        collective_name <- safe_text(author_node, "./CollectiveName")
-        if (nzchar(collective_name)) {
-          return(collective_name)
-        }
+        collective_name <- node_text(author_node, "./CollectiveName")
+        if (nzchar(collective_name)) return(collective_name)
 
-        last_name <- safe_text(author_node, "./LastName")
-        initials <- safe_text(author_node, "./Initials")
-        fore_name <- safe_text(author_node, "./ForeName")
+        last_name <- node_text(author_node, "./LastName")
+        initials  <- node_text(author_node, "./Initials")
+        fore_name <- node_text(author_node, "./ForeName")
 
         parts <- c(last_name, initials)
         parts <- parts[nzchar(parts)]
 
-        if (length(parts) == 0 && nzchar(fore_name)) {
-          return(fore_name)
-        }
-
-        if (length(parts) == 0) {
-          return(NA_character_)
-        }
-
+        if (length(parts) == 0 && nzchar(fore_name)) return(fore_name)
+        if (length(parts) == 0) return(NA_character_)
         paste(parts, collapse = " ")
       }, character(1))
 
       authors <- authors[!is.na(authors) & nzchar(authors)]
-      if (length(authors) == 0) {
-        return(NA_character_)
-      }
-
+      if (length(authors) == 0) return(NA_character_)
       paste(authors, collapse = "|")
     }, character(1))
-
-    unname(values)
   }
 
   extract_year <- function(nodes) {
-    values <- vapply(nodes, function(node) {
-      year_value <- trimws(xml_text(xml_find_first(node, ".//PubDate/Year")))
+    vapply(nodes, function(node) {
+      year_value <- node_text(node, ".//PubDate/Year")
 
       if (!nzchar(year_value)) {
-        medline_value <- trimws(xml_text(xml_find_first(node, ".//PubDate/MedlineDate")))
+        medline_value <- node_text(node, ".//PubDate/MedlineDate")
         year_value <- sub("^([0-9]{4}).*$", "\\1", medline_value)
-        if (!grepl("^[0-9]{4}$", year_value)) {
-          year_value <- NA_character_
-        }
+        if (!grepl("^[0-9]{4}$", year_value)) year_value <- NA_character_
       }
 
       year_value
     }, character(1))
-
-    unname(values)
   }
 
   parse_pubmed_date <- function(nodes, status) {
     month_lookup <- setNames(sprintf("%02d", seq_along(month.abb)), tolower(month.abb))
 
     values <- vapply(nodes, function(node) {
-      date_node <- xml_find_first(node, paste0(".//PubMedPubDate[@PubStatus='", status, "']"))
-      if (inherits(date_node, "xml_missing")) {
-        return(NA_character_)
-      }
+      date_nodes <- getNodeSet(node, paste0(".//PubMedPubDate[@PubStatus='", status, "']"))
+      if (length(date_nodes) == 0) return(NA_character_)
+      date_node <- date_nodes[[1]]
 
-      year_value <- trimws(xml_text(xml_find_first(date_node, "./Year")))
-      month_value <- trimws(xml_text(xml_find_first(date_node, "./Month")))
-      day_value <- trimws(xml_text(xml_find_first(date_node, "./Day")))
+      year_value  <- node_text(date_node, "./Year")
+      month_value <- node_text(date_node, "./Month")
+      day_value   <- node_text(date_node, "./Day")
 
       if (!nzchar(year_value) || !nzchar(month_value) || !nzchar(day_value)) {
         return(NA_character_)
@@ -145,17 +122,12 @@ get_data_from_pubmed_xml <- function(theFile,
       if (grepl("^[0-9]+$", month_value)) {
         month_value <- sprintf("%02d", as.integer(month_value))
       } else {
-        month_key <- tolower(substr(month_value, 1, 3))
+        month_key   <- tolower(substr(month_value, 1, 3))
         month_value <- month_lookup[[month_key]]
       }
 
-      if (is.null(month_value) || is.na(month_value)) {
-        return(NA_character_)
-      }
-
-      if (!grepl("^[0-9]+$", day_value)) {
-        return(NA_character_)
-      }
+      if (is.null(month_value) || is.na(month_value)) return(NA_character_)
+      if (!grepl("^[0-9]+$", day_value)) return(NA_character_)
 
       sprintf("%s-%s-%02d", year_value, month_value, as.integer(day_value))
     }, character(1))
@@ -164,16 +136,16 @@ get_data_from_pubmed_xml <- function(theFile,
   }
 
   theDF <- data.frame(
-    pmid = collapse_nodes(records, ".//MedlineCitation/PMID"),
-    doi = collapse_nodes(records, ".//ELocationID[@EIdType='doi']"),
-    authors = extract_authors(records),
-    year = extract_year(records),
+    pmid         = collapse_nodes(records, ".//MedlineCitation/PMID"),
+    doi          = collapse_nodes(records, ".//ELocationID[@EIdType='doi']"),
+    authors      = extract_authors(records),
+    year         = extract_year(records),
     articletitle = collapse_nodes(records, ".//ArticleTitle"),
-    journal = collapse_nodes(records, ".//ISOAbbreviation"),
-    volume = collapse_nodes(records, ".//JournalIssue/Volume"),
-    issue = collapse_nodes(records, ".//JournalIssue/Issue"),
-    pages = collapse_nodes(records, ".//MedlinePgn"),
-    ptype = collapse_nodes(records, ".//PublicationType"),
+    journal      = collapse_nodes(records, ".//ISOAbbreviation"),
+    volume       = collapse_nodes(records, ".//JournalIssue/Volume"),
+    issue        = collapse_nodes(records, ".//JournalIssue/Issue"),
+    pages        = collapse_nodes(records, ".//MedlinePgn"),
+    ptype        = collapse_nodes(records, ".//PublicationType"),
     stringsAsFactors = FALSE
   )
 
@@ -189,15 +161,16 @@ get_data_from_pubmed_xml <- function(theFile,
 
   if (isTRUE(include_other)) {
     theDF$meshHeadings <- collapse_nodes(records, ".//DescriptorName")
-    theDF$chemNames <- collapse_nodes(records, ".//NameOfSubstance")
-    theDF$grantAgency <- collapse_nodes(records, ".//Grant/Agency", unique_values = TRUE)
-    theDF$grantNumber <- collapse_nodes(records, ".//Grant/GrantID")
+    theDF$chemNames    <- collapse_nodes(records, ".//NameOfSubstance")
+    theDF$grantAgency  <- collapse_nodes(records, ".//Grant/Agency", unique_values = TRUE)
+    theDF$grantNumber  <- collapse_nodes(records, ".//Grant/GrantID")
     theDF$grantCountry <- collapse_nodes(records, ".//Grant/Country", unique_values = TRUE)
-    theDF$nctID <- collapse_nodes(
+    theDF$nctID        <- collapse_nodes(
       records,
       ".//DataBank[DataBankName='ClinicalTrials.gov']/AccessionNumberList/AccessionNumber"
     )
   }
 
+  free(doc)
   return(theDF)
 }

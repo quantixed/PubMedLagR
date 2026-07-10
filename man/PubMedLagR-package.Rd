@@ -11,5 +11,10 @@ This package is intended for parsing data from PubMed XML files, retrieved for e
 \author{
 \strong{Maintainer}: Stephen J Royle \email{admin@quantixed.org} (\href{https://orcid.org/0000-0001-8927-6967}{ORCID})
 
+Authors:
+\itemize{
+  \item Stephen J Royle \email{admin@quantixed.org} (\href{https://orcid.org/0000-0001-8927-6967}{ORCID})
+}
+
 }
 \keyword{internal}
